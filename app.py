@@ -1,14 +1,14 @@
 import streamlit as st
-
-st.set_page_config(
-    page_title="YouTube Summarizer",
-    page_icon="🎥"
-)
+from utils import extract_video_id, get_transcript
 
 st.title("🎥 YouTube Video Summarizer")
 
 url = st.text_input("Enter YouTube URL")
 
-if st.button("Summarize"):
-    st.write("Processing...")
-    
+if st.button("Get Transcript"):
+
+    video_id = extract_video_id(url)
+
+    transcript = get_transcript(video_id)
+
+    st.write(transcript[:1000])
