@@ -25,6 +25,42 @@ def split_transcript(transcript):
 
 
 def summarize_chunks(chunks):
+    def create_final_summary(summaries):
+
+    combined_summaries = "\n\n".join(summaries)
+
+    prompt = f"""
+You are an expert YouTube video summarizer.
+
+Below are summaries of different parts of one YouTube video.
+
+Combine them into ONE complete and easy-to-understand summary.
+
+Use this format:
+
+## Summary
+Give a clear overall summary.
+
+## Key Points
+- Point 1
+- Point 2
+- Point 3
+- Point 4
+- Point 5
+
+## Important Takeaways
+- Takeaway 1
+- Takeaway 2
+- Takeaway 3
+
+Part Summaries:
+
+{combined_summaries}
+"""
+
+    response = llm.invoke(prompt)
+
+    return response.content
 
     summaries = []
 
