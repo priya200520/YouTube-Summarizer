@@ -1,4 +1,15 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+
+load_dotenv()
+
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    temperature=0
+)
 
 
 def split_transcript(transcript):
@@ -11,15 +22,6 @@ def split_transcript(transcript):
     chunks = text_splitter.split_text(transcript)
 
     return chunks
-from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-load_dotenv()
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    temperature=0
-)
 
 
 def summarize_chunks(chunks):
