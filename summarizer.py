@@ -25,7 +25,30 @@ def split_transcript(transcript):
 
 
 def summarize_chunks(chunks):
-    def create_final_summary(summaries):
+
+    summaries = []
+
+    for i, chunk in enumerate(chunks):
+
+        prompt = f"""
+Summarize the following part of a YouTube video.
+
+Give only the important information.
+Use simple and clear language.
+
+Video Part {i + 1}:
+
+{chunk}
+"""
+
+        response = llm.invoke(prompt)
+
+        summaries.append(response.content)
+
+    return summaries
+
+
+def create_final_summary(summaries):
 
     combined_summaries = "\n\n".join(summaries)
 
@@ -61,24 +84,3 @@ Part Summaries:
     response = llm.invoke(prompt)
 
     return response.content
-
-    summaries = []
-
-    for i, chunk in enumerate(chunks):
-
-        prompt = f"""
-Summarize the following part of a YouTube video.
-
-Give only the important information.
-Use simple and clear language.
-
-Video Part {i + 1}:
-
-{chunk}
-"""
-
-        response = llm.invoke(prompt)
-
-        summaries.append(response.content)
-
-    return summaries
