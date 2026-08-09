@@ -83,6 +83,12 @@ if st.button("Summarize"):
         st.success("🎉 Summary Generated!")
 
         st.markdown(final_summary)
+        st.download_button(
+            label="Download Summary",
+            data=final_summary,
+            file_name="summary.txt",
+            mime="text/plain"
+        )
 
 
     except Exception as e:
