@@ -15,46 +15,76 @@ st.set_page_config(
 
 st.title("🎥 YouTube Video Summarizer")
 
-url = st.text_input("Enter YouTube URL")
+st.write("YouTube video ka URL enter karo ya transcript manually paste karo.")
+
+# YouTube URL
+url = st.text_input("🔗 YouTube URL")
+
+# Manual transcript
+manual_transcript = st.text_area(
+    "📝 Agar YouTube transcript fetch na ho, transcript yahan paste karo:",
+    height=200
+)
 
 
 if st.button("Summarize"):
 
-    if not url:
-        st.warning("Please enter a YouTube URL.")
+    transcript = ""
 
-    else:
+    try:
 
-        try:
+        # Manual transcript has priority
+        if manual_transcript.strip():
 
-            # Step 1: Get Video ID
-            video_id = extract_video_id(url)
+            transcript = manual_transcript
 
-            # Step 2: Get Transcript
-            with st.spinner("Getting transcript..."):
+            st.success("Manual transcript received!")
+
+        # Otherwise get transcript from YouTube
+        elif url.strip():
+
+            with st.spinner("Getting YouTube transcript..."):
+
+                video_id = extract_video_id(url)
+
                 transcript = get_transcript(video_id)
 
-            st.success("Transcript fetched successfully!")
+            st.success("YouTube transcript fetched successfully!")
 
-            # Step 3: Split Transcript
-            with st.spinner("Splitting transcript into chunks..."):
-                chunks = split_transcript(transcript)
+        else:
 
-            st.write("Total Chunks:", len(chunks))
+            st.warning(
+                "Please enter a YouTube URL or paste a transcript."
+            )
 
-            # Step 4: Summarize Each Chunk
-            with st.spinner("Generating summaries..."):
-                summaries = summarize_chunks(chunks)
+            st.stop()
 
-            # Step 5: Create Final Summary
-            with st.spinner("Creating final summary..."):
-                final_summary = create_final_summary(summaries)
 
-            # Step 6: Display
-            st.success("Summary Generated!")
+        # Split transcript
+        with st.spinner("Splitting transcript into chunks..."):
 
-            st.markdown(final_summary)
+            chunks = split_transcript(transcript)
 
-        except Exception as e:
+        st.info(f"Transcript divided into {len(chunks)} chunks.")
 
-            st.error(f"Error: {e}")
+
+        # Summarize chunks
+        with st.spinner("Generating AI summaries..."):
+
+            summaries = summarize_chunks(chunks)
+
+
+        # Final summary
+        with st.spinner("Creating final summary..."):
+
+            final_summary = create_final_summary(summaries)
+
+
+        st.success("🎉 Summary Generated!")
+
+        st.markdown(final_summary)
+
+
+    except Exception as e:
+
+        st.error(f"Error: {e}")

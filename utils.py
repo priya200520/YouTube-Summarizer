@@ -9,14 +9,17 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 load_dotenv()
 
 
-# Create Gemini LLM
+# Gemini LLM
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     temperature=0
 )
 
 
+# -----------------------------------
 # Extract YouTube Video ID
+# -----------------------------------
+
 def extract_video_id(url):
 
     parsed_url = urlparse(url)
@@ -45,25 +48,50 @@ def extract_video_id(url):
         raise ValueError("Please enter a valid YouTube URL.")
 
 
+# -----------------------------------
 # Get YouTube Transcript
+# -----------------------------------
+
 def get_transcript(video_id):
 
     api = YouTubeTranscriptApi()
 
-    transcript = api.fetch(
-        video_id,
-        languages=["hi", "en"]
-    )
+    # Get all available transcripts
+    transcript_list = api.list(video_id)
 
+    # First try Hindi
+    try:
+        transcript = transcript_list.find_transcript(["hi"])
+
+    except Exception:
+
+        # If Hindi is not available, try English
+        try:
+            transcript = transcript_list.find_transcript(["en"])
+
+        except Exception:
+
+            # If neither is available
+            raise ValueError(
+                "No Hindi or English transcript is available for this video."
+            )
+
+    # Fetch transcript
+    transcript_data = transcript.fetch()
+
+    # Convert transcript into one large text
     text_parts = []
 
-    for item in transcript:
+    for item in transcript_data:
         text_parts.append(item.text)
 
     return " ".join(text_parts)
 
 
-# Generate AI Summary
+# -----------------------------------
+# Basic Gemini Summary
+# -----------------------------------
+
 def summarize_text(transcript):
 
     prompt = f"""
@@ -90,6 +118,7 @@ Write a clear summary of the video.
 - Takeaway 3
 
 Transcript:
+
 {transcript}
 """
 
