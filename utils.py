@@ -50,7 +50,10 @@ def get_transcript(video_id):
 
     api = YouTubeTranscriptApi()
 
-    transcript = api.fetch(video_id)
+    transcript = api.fetch(
+        video_id,
+        languages=["hi", "en"]
+    )
 
     text_parts = []
 
