@@ -1,4 +1,5 @@
 import streamlit as st
+from urllib.parse import urlparse, parse_qs
 
 from utils import extract_video_id, get_transcript
 from summarizer import (
@@ -8,89 +9,255 @@ from summarizer import (
 )
 
 
+# -----------------------------------
+# Page Configuration
+# -----------------------------------
+
 st.set_page_config(
-    page_title="YouTube Summarizer",
-    page_icon="🎥"
+    page_title="YouTube AI Summarizer",
+    page_icon="🎥",
+    layout="centered"
 )
 
-st.title("🎥 YouTube Video Summarizer")
 
-st.write("YouTube video ka URL enter karo ya transcript manually paste karo.")
+# -----------------------------------
+# Header
+# -----------------------------------
 
+st.title("🎥 YouTube AI Summarizer")
+
+st.write(
+    "Convert a YouTube video transcript into a clear "
+    "AI-powered summary."
+)
+
+st.divider()
+
+
+# -----------------------------------
 # YouTube URL
-url = st.text_input("🔗 YouTube URL")
+# -----------------------------------
 
-# Manual transcript
-manual_transcript = st.text_area(
-    "📝 Agar YouTube transcript fetch na ho, transcript yahan paste karo:",
-    height=200
+st.subheader("🔗 Enter YouTube Video")
+
+url = st.text_input(
+    "YouTube URL",
+    placeholder="https://www.youtube.com/watch?v=..."
 )
 
 
-if st.button("Summarize"):
+# -----------------------------------
+# Video Preview
+# -----------------------------------
+
+if url.strip():
+
+    try:
+
+        parsed_url = urlparse(url)
+
+        video_id = None
+
+        # Normal YouTube URL
+        if "youtube.com" in parsed_url.netloc:
+
+            video_ids = parse_qs(
+                parsed_url.query
+            ).get("v")
+
+            if video_ids:
+                video_id = video_ids[0]
+
+        # Short YouTube URL
+        elif "youtu.be" in parsed_url.netloc:
+
+            video_id = parsed_url.path.strip(
+                "/"
+            ).split("/")[0]
+
+        # Show Preview
+        if video_id:
+
+            st.subheader("🎬 Video Preview")
+
+            thumbnail_url = (
+                f"https://img.youtube.com/vi/"
+                f"{video_id}/maxresdefault.jpg"
+            )
+
+            st.image(
+                thumbnail_url,
+                use_container_width=True
+            )
+
+            st.markdown(
+                f"[▶️ Watch this video on YouTube]"
+                f"(https://www.youtube.com/watch?v={video_id})"
+            )
+
+    except Exception:
+        pass
+
+
+# -----------------------------------
+# Manual Transcript
+# -----------------------------------
+
+st.subheader("📝 Or Paste Transcript")
+
+manual_transcript = st.text_area(
+    "Paste your transcript here if YouTube "
+    "transcript cannot be fetched.",
+    height=180
+)
+
+
+# -----------------------------------
+# Generate Summary
+# -----------------------------------
+
+if st.button(
+    "🚀 Generate Summary",
+    use_container_width=True
+):
 
     transcript = ""
 
     try:
 
-        # Manual transcript has priority
+        # -----------------------------------
+        # Manual Transcript
+        # -----------------------------------
+
         if manual_transcript.strip():
 
             transcript = manual_transcript
 
-            st.success("Manual transcript received!")
+            st.success(
+                "✅ Manual transcript received!"
+            )
 
-        # Otherwise get transcript from YouTube
+
+        # -----------------------------------
+        # YouTube Transcript
+        # -----------------------------------
+
         elif url.strip():
 
-            with st.spinner("Getting YouTube transcript..."):
+            with st.spinner(
+                "🔍 Fetching YouTube transcript..."
+            ):
 
                 video_id = extract_video_id(url)
 
-                transcript = get_transcript(video_id)
+                transcript = get_transcript(
+                    video_id
+                )
 
-            st.success("YouTube transcript fetched successfully!")
+            st.success(
+                "✅ YouTube transcript fetched successfully!"
+            )
+
+
+        # -----------------------------------
+        # No Input
+        # -----------------------------------
 
         else:
 
             st.warning(
-                "Please enter a YouTube URL or paste a transcript."
+                "Please enter a YouTube URL "
+                "or paste a transcript."
             )
 
             st.stop()
 
 
-        # Split transcript
-        with st.spinner("Splitting transcript into chunks..."):
+        # -----------------------------------
+        # Text Splitting
+        # -----------------------------------
 
-            chunks = split_transcript(transcript)
+        with st.spinner(
+            "✂️ Splitting transcript into chunks..."
+        ):
 
-        st.info(f"Transcript divided into {len(chunks)} chunks.")
+            chunks = split_transcript(
+                transcript
+            )
 
-
-        # Summarize chunks
-        with st.spinner("Generating AI summaries..."):
-
-            summaries = summarize_chunks(chunks)
-
-
-        # Final summary
-        with st.spinner("Creating final summary..."):
-
-            final_summary = create_final_summary(summaries)
+        st.info(
+            f"📦 Transcript divided into "
+            f"{len(chunks)} chunks."
+        )
 
 
-        st.success("🎉 Summary Generated!")
+        # -----------------------------------
+        # Chunk Summaries
+        # -----------------------------------
 
-        st.markdown(final_summary)
+        with st.spinner(
+            "🧠 AI is analyzing the video..."
+        ):
+
+            summaries = summarize_chunks(
+                chunks
+            )
+
+
+        # -----------------------------------
+        # Final Summary
+        # -----------------------------------
+
+        with st.spinner(
+            "📝 Creating final summary..."
+        ):
+
+            final_summary = create_final_summary(
+                summaries
+            )
+
+
+        # -----------------------------------
+        # Display Summary
+        # -----------------------------------
+
+        st.divider()
+
+        st.subheader(
+            "📑 AI Generated Summary"
+        )
+
+        st.markdown(
+            final_summary
+        )
+
+
+        # -----------------------------------
+        # Download Summary
+        # -----------------------------------
+
         st.download_button(
-            label="Download Summary",
+            label="📥 Download Summary",
             data=final_summary,
-            file_name="summary.txt",
-            mime="text/plain"
+            file_name="youtube_summary.txt",
+            mime="text/plain",
+            use_container_width=True
         )
 
 
     except Exception as e:
 
-        st.error(f"Error: {e}")
+        st.error(
+            f"❌ Error: {e}"
+        )
+
+
+# -----------------------------------
+# Footer
+# -----------------------------------
+
+st.divider()
+
+st.caption(
+    "Built with Python • LangChain • Gemini • Streamlit"
+)
